@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SCTP Data Science & AI — Class Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f172a;
+    --ink: #1e293b;
+    --slate: #334155;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --surface: #f8fafc;
+    --white: #ffffff;
+    --accent: #6366f1;
+    --accent2: #8b5cf6;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    padding: 28px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(99,102,241,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(99,102,241,0.2);
+    border: 1px solid rgba(99,102,241,0.5);
+    color: #a5b4fc;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p { color: #94a3b8; font-size: 13px; margin-top: 6px; }
+
+  /* TABS */
+  .tabs-wrap { background: #0f172a; padding: 12px 16px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.06);
+    color: #94a3b8;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+  }
+
+  /* CONTENT */
+  .content { padding: 20px 16px 40px; max-width: 600px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION TITLE */
+  .section-title {
+    margin-bottom: 20px;
+  }
+  .section-title h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .section-title p { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+
+  /* CARDS */
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2));
+    border-radius: 3px 0 0 3px;
+  }
+  .card.blue::before { background: linear-gradient(to bottom, #3b82f6, #06b6d4); }
+  .card.green::before { background: linear-gradient(to bottom, #10b981, #34d399); }
+  .card.purple::before { background: linear-gradient(to bottom, #8b5cf6, #c084fc); }
+  .card-icon { font-size: 28px; margin-bottom: 8px; }
+  .card h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .card p { font-size: 13px; color: #94a3b8; line-height: 1.6; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #cbd5e1;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #0a0f1e;
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 14px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .code-block .comment { color: #475569; }
+  .code-block .keyword { color: #818cf8; }
+  .code-block .string { color: #34d399; }
+  .code-block .fn { color: #38bdf8; }
+
+  /* PIPELINE */
+  .pipeline { display: flex; overflow-x: auto; gap: 0; margin: 16px 0; padding-bottom: 4px; scrollbar-width: none; }
+  .pipeline::-webkit-scrollbar { display: none; }
+  .pipe-step {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .pipe-box {
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    gap: 2px;
+  }
+  .pipe-label { font-size: 10px; color: #64748b; text-align: center; max-width: 72px; line-height: 1.3; }
+  .pipe-arrow { display: flex; align-items: center; padding: 0 4px; margin-top: -20px; color: #475569; font-size: 16px; }
+
+  /* IMAGE SELECTOR */
+  .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+  .img-option {
+    aspect-ratio: 1;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    gap: 6px;
+    font-size: 10px;
+    color: #64748b;
+  }
+  .img-option .emoji { font-size: 32px; }
+  .img-option.selected {
+    border-color: var(--accent);
+    background: rgba(99,102,241,0.1);
+    color: #a5b4fc;
+  }
+
+  /* BAR */
+  .conf-bar-wrap { margin-bottom: 10px; }
+  .conf-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: #94a3b8; }
+  .conf-label span:last-child { color: var(--accent2); font-weight: 600; }
+  .conf-track { background: rgba(255,255,255,0.06); border-radius: 6px; height: 6px; overflow: hidden; }
+  .conf-fill { height: 100%; border-radius: 6px; background: linear-gradient(to right, var(--accent), var(--accent2)); transition: width 0.6s ease; }
+
+  /* COMPARE GRID */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  .compare-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .compare-header {
+    padding: 12px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .compare-header.blue { background: rgba(59,130,246,0.2); color: #93c5fd; border-bottom: 1px solid rgba(59,130,246,0.2); }
+  .compare-header.purple { background: rgba(139,92,246,0.2); color: #c4b5fd; border-bottom: 1px solid rgba(139,92,246,0.2); }
+  .compare-header .big-emoji { font-size: 24px; display: block; margin-bottom: 4px; }
+  .compare-body { padding: 12px; }
+  .compare-body p { font-size: 11px; color: #64748b; margin-bottom: 8px; line-height: 1.5; }
+  .pro-con { font-size: 11px; color: #94a3b8; margin-bottom: 3px; line-height: 1.4; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin: 8px 0 4px; }
+  .section-label.green { color: #34d399; }
+  .section-label.red { color: #f87171; }
+
+  /* MATRIX TABLE */
+  .matrix-table { width: 100%; border-collapse: collapse; font-size: 12px; border-radius: 12px; overflow: hidden; margin: 12px 0; }
+  .matrix-table th { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .matrix-table td { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #94a3b8; }
+  .matrix-table tr:last-child td { border-bottom: none; }
+  .matrix-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .matrix-table td:first-child { color: #cbd5e1; font-weight: 500; }
+
+  /* QUIZ */
+  .quiz-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .quiz-q { font-size: 13px; color: #e2e8f0; margin-bottom: 12px; line-height: 1.5; font-weight: 500; }
+  .quiz-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .quiz-btn {
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .quiz-btn:hover { border-color: var(--accent); color: #a5b4fc; }
+  .quiz-result { margin-top: 10px; padding: 10px 12px; border-radius: 10px; font-size: 12px; line-height: 1.5; }
+  .quiz-result.correct { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+  .quiz-result.wrong { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+
+  /* LIVE DEMO */
+  .textarea-wrap { position: relative; margin: 14px 0; }
+  .demo-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px;
+    color: #e2e8f0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  .demo-textarea:focus { border-color: var(--accent); }
+  .demo-textarea::placeholder { color: #475569; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 25px rgba(99,102,241,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .sentiment-box {
+    border-radius: 14px;
+    padding: 16px;
+    margin: 14px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sentiment-box.positive { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+  .sentiment-box.negative { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+  .sentiment-box.neutral { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+  .sentiment-label { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+  .sentiment-label.positive { color: #34d399; }
+  .sentiment-label.negative { color: #f87171; }
+  .sentiment-label.neutral { color: #fcd34d; }
+  .sentiment-score { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+  .conf-pct { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; }
+  .conf-pct.positive { color: #34d399; }
+  .conf-pct.negative { color: #f87171; }
+  .conf-pct.neutral { color: #fcd34d; }
+
+  .topics-wrap { margin: 12px 0; }
+  .topics-wrap h4 { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .topic-chip {
+    padding: 6px 14px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+    border: 1px solid rgba(99,102,241,0.3);
+    color: #a5b4fc;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .insight-box {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 14px;
+    padding: 14px;
+    margin: 12px 0;
+  }
+  .insight-box h4 { color: #fcd34d; font-size: 13px; margin-bottom: 8px; }
+  .insight-box li { font-size: 12px; color: #94a3b8; line-height: 1.7; list-style: none; padding-left: 0; }
+  .insight-box li::before { content: '→ '; color: #f59e0b; }
+
+  .flow-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0; }
+  .flow-chip { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .flow-arrow { color: #475569; font-size: 14px; }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+
+  /* MATRIX TOGGLE */
+  .toggle-btn {
+    width: 100%;
+    padding: 11px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    color: #94a3b8;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 10px 0;
+  }
+  .toggle-btn:hover { border-color: var(--accent); color: #a5b4fc; }
+
+  /* SAMPLE FEEDBACK BUTTONS */
+  .sample-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .sample-btn {
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    color: #94a3b8;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .sample-btn:hover { border-color: var(--accent); color: #a5b4fc; background: rgba(99,102,241,0.08); }
+
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #475569;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 4px;
+  }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">SCTP Cohort 3 — Data Science & AI</div>
+  <h1>Class Q&A<br>Interactive Demo</h1>
+  <p>Semantic Layers · Image Tagging · Rule-Based vs Dynamic · Live NLP</p>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">🧠 Semantic Layers</button>
+    <button class="tab-btn" onclick="switchTab(1)">🖼️ Image Tagging</button>
+    <button class="tab-btn" onclick="switchTab(2)">⚖️ Rule vs Dynamic</button>
+    <button class="tab-btn" onclick="switchTab(3)">⚡ Live Demo</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- TAB 1: SEMANTIC LAYERS -->
+  <div class="panel active" id="panel-0">
+    <div class="section-title">
+      <h2>Semantic Layers for Unstructured Data</h2>
+      <p>How machines extract meaning from messy, raw data</p>
+    </div>
+
+    <div class="card blue">
+      <div class="card-icon">📄</div>
+      <h3>What is Unstructured Data?</h3>
+      <p>Data without a fixed format — no rows, no columns. Cannot be directly stored in a traditional table.</p>
+      <div class="tag-list">
+        <span class="tag">Customer Reviews</span>
+        <span class="tag">Social Media Posts</span>
+        <span class="tag">Medical Images</span>
+        <span class="tag">Call Recordings</span>
+        <span class="tag">PDFs / Documents</span>
+      </div>
+    </div>
+
+    <div class="card purple">
+      <div class="card-icon">🧠</div>
+      <h3>What is a Semantic Layer?</h3>
+      <p>A translation layer that gives MEANING to raw data — bridging unstructured content and business concepts that humans understand.</p>
+      <div class="tag-list">
+        <span class="tag">Embeddings (BERT)</span>
+        <span class="tag">Knowledge Graphs</span>
+        <span class="tag">Ontologies</span>
+        <span class="tag">Vector Databases</span>
+      </div>
+    </div>
+
+    <div class="card green">
+      <div class="card-icon">⚙️</div>
+      <h3>The Pipeline</h3>
+      <p>How unstructured data flows into something searchable and meaningful:</p>
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-box">📝<span style="font-size:9px;color:#64748b">Raw Text</span></div>
+        <div class="pipe-label">Unstructured Input</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">🔤<span style="font-size:9px;color:#64748b">Tokens</span></div>
+        <div class="pipe-label">Tokenization</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">📐<span style="font-size:9px;color:#64748b">Vectors</span></div>
+        <div class="pipe-label">Embeddings</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">🗄️<span style="font-size:9px;color:#64748b">Store</span></div>
+        <div class="pipe-label">Vector DB</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">🔍<span style="font-size:9px;color:#64748b">Query</span></div>
+        <div class="pipe-label">Semantic Search</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="comment"># Python: Semantic embeddings from text</div>
+      <div><span class="keyword">from</span> sentence_transformers <span class="keyword">import</span> <span class="fn">SentenceTransformer</span></div>
+      <div class="mt-1"></div>
+      <div>model = <span class="fn">SentenceTransformer</span>(<span class="string">'all-MiniLM-L6-v2'</span>)</div>
+      <div class="mt-1"></div>
+      <div>texts = [</div>
+      <div>&nbsp;&nbsp;<span class="string">"Customer complained about late delivery"</span>,</div>
+      <div>&nbsp;&nbsp;<span class="string">"Package arrived very delayed"</span></div>
+      <div>]</div>
+      <div class="mt-1"></div>
+      <div>embeddings = model.<span class="fn">encode</span>(texts)</div>
+      <div class="comment"># Similar sentences → similar vectors!</div>
+      <div class="comment"># Similarity score: 0.94 ← they mean the same thing</div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">💡</div>
+      <h3>Key Takeaway</h3>
+      <p>Without a semantic layer, <strong style="color:#e2e8f0">"delayed package"</strong> and <strong style="color:#e2e8f0">"late delivery"</strong> look completely different to a computer. The semantic layer makes them <strong style="color:#6ee7b7">nearly identical</strong> — because they mean the same thing.</p>
+    </div>
+  </div>
+
+  <!-- TAB 2: IMAGE TAGGING -->
+  <div class="panel hidden" id="panel-1">
+    <div class="section-title">
+      <h2>How to Tag a Picture</h2>
+      <p>Step-by-step pipeline from pixels to labels</p>
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-box">🖼️</div>
+        <div class="pipe-label">Input Image (Pixels)</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">🔬</div>
+        <div class="pipe-label">CNN Layers (Features)</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">🧩</div>
+        <div class="pipe-label">Classification Head</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">📊</div>
+        <div class="pipe-label">Confidence Scores</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-box">🏷️</div>
+        <div class="pipe-label">Tags Generated</div>
+      </div>
+    </div>
+
+    <div style="margin:18px 0 10px;font-size:13px;font-weight:600;color:#94a3b8;">🎯 Try It — Select an image:</div>
+
+    <div class="img-grid">
+      <div class="img-option selected" id="img-0" onclick="selectImage(0)">
+        <div class="emoji">🏖️</div>Beach
+      </div>
+      <div class="img-option" id="img-1" onclick="selectImage(1)">
+        <div class="emoji">🏙️</div>City
+      </div>
+      <div class="img-option" id="img-2" onclick="selectImage(2)">
+        <div class="emoji">🍽️</div>Food
+      </div>
+      <div class="img-option" id="img-3" onclick="selectImage(3)">
+        <div class="emoji">🌲</div>Forest
+      </div>
+      <div class="img-option" id="img-4" onclick="selectImage(4)">
+        <div class="emoji">🐕</div>Animal
+      </div>
+      <div class="img-option" id="img-5" onclick="selectImage(5)">
+        <div class="emoji">🏥</div>Medical
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="analyzeImage()">🔍 Analyze & Generate Tags</button>
+
+    <div id="img-results" class="hidden" style="margin-top:16px;">
+      <div style="text-align:center;font-size:48px;margin-bottom:12px;" id="img-emoji"></div>
+      <div style="font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Generated Tags</div>
+      <div id="img-bars"></div>
+    </div>
+
+    <div class="code-block" style="margin-top:20px;">
+      <div class="comment"># Real-world: HuggingFace image classification</div>
+      <div><span class="keyword">from</span> transformers <span class="keyword">import</span> pipeline</div>
+      <div class="mt-1"></div>
+      <div>classifier = <span class="fn">pipeline</span>(<span class="string">"image-classification"</span>,</div>
+      <div>&nbsp;&nbsp;model=<span class="string">"google/vit-base-patch16-224"</span>)</div>
+      <div class="mt-1"></div>
+      <div>result = classifier(<span class="string">"my_photo.jpg"</span>)</div>
+      <div class="comment"># → [{'label': 'beach', 'score': 0.97}, ...]</div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🧩</div>
+      <h3>What CNN Layers Actually Do</h3>
+      <p><strong style="color:#e2e8f0">Early layers</strong> detect edges & colors → <strong style="color:#e2e8f0">Middle layers</strong> detect shapes & textures → <strong style="color:#e2e8f0">Deep layers</strong> detect objects & scenes. Each layer builds on the previous one!</p>
+    </div>
+  </div>
+
+  <!-- TAB 3: RULE VS DYNAMIC -->
+  <div class="panel hidden" id="panel-2">
+    <div class="section-title">
+      <h2>Rule-Based vs Dynamic Decisions</h2>
+      <p>How to choose the right approach for your problem</p>
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-header blue">
+          <span class="big-emoji">📋</span>Rule-Based
+        </div>
+        <div class="compare-body">
+          <p>Predefined IF-THEN logic written by humans</p>
+          <div class="section-label green">✅ Pros</div>
+          <div class="pro-con">• Transparent & explainable</div>
+          <div class="pro-con">• Predictable outcomes</div>
+          <div class="pro-con">• No training data needed</div>
+          <div class="pro-con">• Easy to audit</div>
+          <div class="section-label red">❌ Cons</div>
+          <div class="pro-con">• Can't handle new patterns</div>
+          <div class="pro-con">• Brittle on edge cases</div>
+          <div class="pro-con">• Expensive to maintain</div>
+          <div class="pro-con">• Doesn't improve over time</div>
+        </div>
+      </div>
+      <div class="compare-card">
+        <div class="compare-header purple">
+          <span class="big-emoji">🤖</span>Dynamic (ML)
+        </div>
+        <div class="compare-body">
+          <p>Learns patterns from data automatically</p>
+          <div class="section-label green">✅ Pros</div>
+          <div class="pro-con">• Adapts to new patterns</div>
+          <div class="pro-con">• Handles complex data</div>
+          <div class="pro-con">• Improves with more data</div>
+          <div class="pro-con">• Scales easily</div>
+          <div class="section-label red">❌ Cons</div>
+          <div class="pro-con">• Black box (less clear)</div>
+          <div class="pro-con">• Needs labelled data</div>
+          <div class="pro-con">• Can have bias</div>
+          <div class="pro-con">• Requires monitoring</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="comment"># Rule-Based Example</div>
+      <div><span class="keyword">if</span> age > 18 <span class="keyword">and</span> income > 30000:</div>
+      <div>&nbsp;&nbsp;approve_loan = <span class="keyword">True</span></div>
+      <div class="mt-1"></div>
+      <div class="comment"># Dynamic (ML) Example</div>
+      <div>probability = model.<span class="fn">predict</span>(customer_data)</div>
+      <div class="comment"># → 0.87 ← model learned from 1M past loans</div>
+    </div>
+
+    <button class="toggle-btn" onclick="toggleMatrix()">📊 Show/Hide Decision Matrix</button>
+
+    <div id="matrix" class="hidden">
+      <table class="matrix-table">
+        <tr><th>Factor</th><th>Rule-Based</th><th>Dynamic ML</th></tr>
+        <tr><td>Data Volume</td><td>Small OK</td><td>Needs Large</td></tr>
+        <tr><td>Explainability</td><td>✅ High</td><td>⚠️ Low</td></tr>
+        <tr><td>Pattern Complexity</td><td>Simple</td><td>Complex</td></tr>
+        <tr><td>Regulatory Compliance</td><td>✅ Easier</td><td>⚠️ Harder</td></tr>
+        <tr><td>Maintenance Cost</td><td>High (manual)</td><td>Low (auto)</td></tr>
+        <tr><td>Adapts to Change</td><td>❌ Poor</td><td>✅ Good</td></tr>
+      </table>
+    </div>
+
+    <div style="margin-top:20px;margin-bottom:12px;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;">🧠 Test Your Understanding</div>
+
+    <div class="quiz-card">
+      <div class="quiz-q">Scenario 1: Detecting credit card fraud in real-time across millions of daily transactions where fraud patterns change weekly.</div>
+      <div class="quiz-btns">
+        <button class="quiz-btn" onclick="checkQuiz(0,'rule')">📋 Rule-Based</button>
+        <button class="quiz-btn" onclick="checkQuiz(0,'dynamic')">🤖 Dynamic ML</button>
+      </div>
+      <div id="quiz-result-0" class="hidden quiz-result"></div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-q">Scenario 2: Checking if a new employee's form has all required fields (name, ID, department) filled in before submission.</div>
+      <div class="quiz-btns">
+        <button class="quiz-btn" onclick="checkQuiz(1,'rule')">📋 Rule-Based</button>
+        <button class="quiz-btn" onclick="checkQuiz(1,'dynamic')">🤖 Dynamic ML</button>
+      </div>
+      <div id="quiz-result-1" class="hidden quiz-result"></div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-q">Scenario 3: A hospital needs to flag abnormal X-rays for radiologist review, from thousands of scans per day.</div>
+      <div class="quiz-btns">
+        <button class="quiz-btn" onclick="checkQuiz(2,'rule')">📋 Rule-Based</button>
+        <button class="quiz-btn" onclick="checkQuiz(2,'dynamic')">🤖 Dynamic ML</button>
+      </div>
+      <div id="quiz-result-2" class="hidden quiz-result"></div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-q">Scenario 4: Triggering a factory safety alarm when a temperature sensor exceeds 80°C.</div>
+      <div class="quiz-btns">
+        <button class="quiz-btn" onclick="checkQuiz(3,'rule')">📋 Rule-Based</button>
+        <button class="quiz-btn" onclick="checkQuiz(3,'dynamic')">🤖 Dynamic ML</button>
+      </div>
+      <div id="quiz-result-3" class="hidden quiz-result"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: LIVE DEMO -->
+  <div class="panel hidden" id="panel-3">
+    <div class="section-title">
+      <h2>⚡ Live NLP Demo</h2>
+      <p>Watch semantic analysis + rule-based classification happen in real time</p>
+    </div>
+
+    <div class="flow-chips">
+      <span class="flow-chip" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;">1️⃣ Text Input</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-chip" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;">2️⃣ Semantic Layer</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-chip" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;">3️⃣ Rule Engine</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-chip" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;">4️⃣ Output</span>
+    </div>
+
+    <div style="margin:16px 0 8px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Try a sample:</div>
+    <div class="sample-btns">
+      <button class="sample-btn" onclick="loadSample(0)">😡 Negative Review</button>
+      <button class="sample-btn" onclick="loadSample(1)">😊 Positive Review</button>
+      <button class="sample-btn" onclick="loadSample(2)">🚚 Delivery Issue</button>
+      <button class="sample-btn" onclick="loadSample(3)">💬 Mixed Feedback</button>
+    </div>
+
+    <div class="textarea-wrap">
+      <textarea class="demo-textarea" id="demo-text" rows="5" placeholder='Type customer feedback here... e.g. "The delivery was terrible and took 2 weeks. Very disappointed!"'></textarea>
+    </div>
+
+    <button class="btn-primary" onclick="runDemo()">⚡ Analyze Feedback Now</button>
+
+    <div id="demo-results" class="hidden" style="margin-top:20px;">
+      <div id="sentiment-box"></div>
+
+      <div class="topics-wrap">
+        <h4>🏷️ Topics Detected</h4>
+        <div class="topic-chips" id="topic-chips"></div>
+      </div>
+
+      <div class="code-block">
+        <div id="pseudo-code"></div>
+      </div>
+
+      <div class="insight-box">
+        <h4>💡 What This Demo Shows:</h4>
+        <ul>
+          <li>The <strong style="color:#fcd34d">semantic layer</strong> extracted topics from unstructured text</li>
+          <li>The <strong style="color:#fcd34d">rule-based engine</strong> used keyword matching for sentiment</li>
+          <li>A <strong style="color:#fcd34d">dynamic ML model</strong> (BERT) would be far more accurate at scale</li>
+          <li>Both approaches are often <strong style="color:#fcd34d">combined</strong> in real production systems</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // TAB SWITCHING
+  const panels = document.querySelectorAll('.panel');
+  const tabBtns = document.querySelectorAll('.tab-btn');
+
+  function switchTab(i) {
+    panels.forEach((p, idx) => {
+      p.classList.toggle('active', idx === i);
+      p.classList.toggle('hidden', idx !== i);
+    });
+    tabBtns.forEach((b, idx) => b.classList.toggle('active', idx === i));
+  }
+
+  // IMAGE TAGGING
+  const images = [
+    { emoji: '🏖️', name: 'Beach Scene', tags: [['Beach',97],['Ocean',93],['Sand',89],['Sunny',82],['Vacation',74]] },
+    { emoji: '🏙️', name: 'City Street', tags: [['Urban',96],['Buildings',91],['Road',88],['Pedestrians',79],['Traffic',71]] },
+    { emoji: '🍽️', name: 'Food Plate',  tags: [['Food',99],['Restaurant',87],['Cuisine',83],['Dining',77],['Healthy',65]] },
+    { emoji: '🌲', name: 'Forest',      tags: [['Forest',98],['Trees',94],['Nature',90],['Green',85],['Wildlife',68]] },
+    { emoji: '🐕', name: 'Animal',      tags: [['Dog',99],['Pet',95],['Animal',92],['Mammal',84],['Domestic',76]] },
+    { emoji: '🏥', name: 'Medical',     tags: [['Healthcare',97],['Hospital',92],['Clinical',87],['Medical',82],['Care',73]] },
+  ];
+  let selectedImg = 0;
+
+  function selectImage(i) {
+    document.querySelectorAll('.img-option').forEach((el, idx) => {
+      el.classList.toggle('selected', idx === i);
+    });
+    selectedImg = i;
+    document.getElementById('img-results').classList.add('hidden');
+  }
+
+  function analyzeImage() {
+    const img = images[selectedImg];
+    document.getElementById('img-emoji').textContent = img.emoji;
+    let html = '';
+    img.tags.forEach(([label, conf]) => {
+      html += `
+        <div class="conf-bar-wrap">
+          <div class="conf-label"><span>🏷️ ${label}</span><span>${conf}%</span></div>
+          <div class="conf-track"><div class="conf-fill" style="width:${conf}%"></div></div>
+        </div>`;
+    });
+    document.getElementById('img-bars').innerHTML = html;
+    document.getElementById('img-results').classList.remove('hidden');
+  }
+
+  // DECISION MATRIX TOGGLE
+  function toggleMatrix() {
+    document.getElementById('matrix').classList.toggle('hidden');
+  }
+
+  // QUIZ
+  const quizAnswers = ['dynamic','rule','dynamic','rule'];
+  const quizReasons = [
+    'Fraud patterns constantly evolve — ML adapts automatically where rules would need constant manual updates.',
+    'Clear fixed criteria with simple conditions — perfect for IF-THEN logic with no ambiguity.',
+    'Detecting subtle anomalies in medical images is far too complex for manual rules — ML excels here.',
+    'Safety-critical system needs to be 100% predictable and explainable. IF temp > 80°C → alarm.'
+  ];
+
+  function checkQuiz(i, chosen) {
+    const correct = quizAnswers[i] === chosen;
+    const el = document.getElementById(`quiz-result-${i}`);
+    el.classList.remove('hidden','correct','wrong');
+    el.classList.add(correct ? 'correct' : 'wrong');
+    const answerLabel = quizAnswers[i] === 'rule' ? '📋 Rule-Based' : '🤖 Dynamic ML';
+    el.innerHTML = (correct ? '✅ Correct! ' : `❌ Not quite. Answer: ${answerLabel}. `) + quizReasons[i];
+  }
+
+  // LIVE DEMO
+  const samples = [
+    "The product quality was absolutely terrible. Broken on arrival, worst purchase ever. Very disappointed with this company.",
+    "Amazing service! The team was incredibly helpful and the product exceeded my expectations. Love it, would highly recommend!",
+    "My package still hasn't arrived after 2 weeks. The shipping is extremely slow and no one can track where it is.",
+    "The product itself is good quality but the delivery took too long. Customer service was helpful though.",
+  ];
+
+  function loadSample(i) {
+    document.getElementById('demo-text').value = samples[i];
+    document.getElementById('demo-results').classList.add('hidden');
+  }
+
+  const posWords = ['good','great','excellent','love','amazing','happy','best','fantastic','wonderful','awesome','incredible','helpful','recommend','exceeded','perfect'];
+  const negWords = ['bad','terrible','hate','awful','worst','poor','disappointed','horrible','useless','broken','slow','never','wrong','worst','failed'];
+  const topicMap = {
+    '📦 Delivery': ['delivery','shipping','arrived','late','package','courier','dispatch','transit','weeks','days'],
+    '💰 Price / Refund': ['price','expensive','cheap','cost','value','refund','money','paid','charge','affordable'],
+    '🛎️ Customer Service': ['service','staff','support','help','team','agent','response','contact','replied','handled'],
+    '📱 Product Quality': ['product','quality','item','feature','works','broken','design','build','material','arrived'],
+  };
+
+  function runDemo() {
+    const text = document.getElementById('demo-text').value.trim();
+    if (!text) return;
+    const lower = text.toLowerCase();
+
+    const posScore = posWords.filter(w => lower.includes(w)).length;
+    const negScore = negWords.filter(w => lower.includes(w)).length;
+
+    let sentiment, cls, conf;
+    if (posScore > negScore) { sentiment = 'Positive 😊'; cls = 'positive'; conf = Math.min(96, 58 + posScore * 10); }
+    else if (negScore > posScore) { sentiment = 'Negative 😞'; cls = 'negative'; conf = Math.min(96, 58 + negScore * 10); }
+    else { sentiment = 'Neutral 😐'; cls = 'neutral'; conf = 55; }
+
+    document.getElementById('sentiment-box').innerHTML = `
+      <div class="sentiment-box ${cls}">
+        <div>
+          <div class="sentiment-label ${cls}">${sentiment}</div>
+          <div class="sentiment-score">Detected by keyword rule engine</div>
+        </div>
+        <div class="conf-pct ${cls}">${conf}%</div>
+      </div>
+    `;
+
+    const topics = Object.entries(topicMap)
+      .filter(([,words]) => words.some(w => lower.includes(w)))
+      .map(([topic]) => topic);
+    const chips = (topics.length ? topics : ['🔍 General Feedback'])
+      .map(t => `<span class="topic-chip">${t}</span>`).join('');
+    document.getElementById('topic-chips').innerHTML = chips;
+
+    const short = text.length > 35 ? text.slice(0,35) + '...' : text;
+    document.getElementById('pseudo-code').innerHTML = `
+      <div class="step-indicator"><div class="step-dot"></div><span style="color:#475569">Step 1: Tokenize input</span></div>
+      <div>tokens = <span style="color:#38bdf8">tokenize</span>(<span style="color:#34d399">"${short}"</span>)</div>
+      <div style="margin-top:6px" class="step-indicator"><div class="step-dot"></div><span style="color:#475569">Step 2: Rule engine for sentiment</span></div>
+      <div>sentiment = rule_engine.<span style="color:#38bdf8">classify</span>(tokens)</div>
+      <div style="color:#475569"># → "${sentiment}"  confidence: ${conf}%</div>
+      <div style="margin-top:6px" class="step-indicator"><div class="step-dot"></div><span style="color:#475569">Step 3: Semantic topic extraction</span></div>
+      <div>topics = semantic_layer.<span style="color:#38bdf8">extract</span>(tokens)</div>
+      <div style="color:#475569"># → [${(topics.length ? topics : ['General']).map(t=>`"${t}"`).join(', ')}]</div>
+    `;
+
+    document.getElementById('demo-results').classList.remove('hidden');
+    document.getElementById('demo-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>
